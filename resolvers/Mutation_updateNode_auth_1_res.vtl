@@ -1,0 +1,100 @@
+## [Start] Authorization Steps. **
+$util.qr($ctx.stash.put("hasAuth", true))
+#if( $ctx.error )
+  $util.error($ctx.error.message, $ctx.error.type)
+#end
+#set( $inputFields = $util.parseJson($util.toJson($ctx.args.input.keySet())) )
+#set( $isAuthorized = false )
+#set( $allowedFields = [] )
+#set( $nullAllowedFields = [] )
+#set( $deniedFields = {} )
+#if( $util.authType() == "IAM Authorization" )
+$util.unauthorized()
+#end
+#if( $util.authType() == "User Pool Authorization" )
+  #if( !$isAuthorized )
+    #set( $staticGroupRoles = [{"claim":"cognito:groups","entity":"Admins","allowedFields":[],"nullAllowedFields":[]},{"claim":"cognito:groups","entity":"Writers","allowedFields":[],"nullAllowedFields":[]},{"claim":"cognito:groups","entity":"SuperAdmins","allowedFields":[],"nullAllowedFields":[]}] )
+    #foreach( $groupRole in $staticGroupRoles )
+      #set( $groupsInToken = $util.defaultIfNull($ctx.identity.claims.get($groupRole.claim), []) )
+      #if( $groupsInToken.contains($groupRole.entity) )
+        #if( !$groupRole.allowedFields.isEmpty() || !$groupRole.nullAllowedFields.isEmpty() )
+          $util.qr($allowedFields.addAll($groupRole.allowedFields))
+          $util.qr($nullAllowedFields.addAll($groupRole.nullAllowedFields))
+        #else
+          #set( $isAuthorized = true )
+          #break
+        #end
+      #end
+    #end
+  #end
+  #if( !$isAuthorized )
+    #set( $ownerEntity0 = $util.defaultIfNull($ctx.result.owner, null) )
+    #set( $ownerClaim0 = $util.defaultIfNull($ctx.identity.claims.get("username"), $util.defaultIfNull($ctx.identity.claims.get("cognito:username"), "___xamznone____")) )
+    #set( $ownerAllowedFields0 = [] )
+    #set( $ownerNullAllowedFields0 = [] )
+    #if( $ownerEntity0 == $ownerClaim0 )
+      #if( !$ownerAllowedFields0.isEmpty() || !$ownerNullAllowedFields0.isEmpty() )
+        $util.qr($allowedFields.addAll($ownerAllowedFields0))
+        $util.qr($nullAllowedFields.addAll($ownerNullAllowedFields0))
+      #else
+        #set( $isAuthorized = true )
+      #end
+    #end
+  #end
+  #if( !$isAuthorized )
+    #set( $ownerEntity1 = $util.defaultIfNull($ctx.result.writers, null) )
+    #set( $ownerClaim1 = $util.defaultIfNull($ctx.identity.claims.get("username"), $util.defaultIfNull($ctx.identity.claims.get("cognito:username"), "___xamznone____")) )
+    #set( $ownerAllowedFields1 = [] )
+    #set( $ownerNullAllowedFields1 = [] )
+    #if( $ownerEntity1 == $ownerClaim1 )
+      #if( !$ownerAllowedFields1.isEmpty() || !$ownerNullAllowedFields1.isEmpty() )
+        $util.qr($allowedFields.addAll($ownerAllowedFields1))
+        $util.qr($nullAllowedFields.addAll($ownerNullAllowedFields1))
+      #else
+        #set( $isAuthorized = true )
+      #end
+    #end
+  #end
+  #if( !$isAuthorized )
+    #set( $groupEntity2 = $util.defaultIfNull($ctx.result.writerGroups, null) )
+    #set( $groupClaim2 = $util.defaultIfNull($ctx.identity.claims.get("cognito:groups"), []) )
+    #set( $groupAllowedFields2 = [] )
+    #set( $groupNullAllowedFields2 = [] )
+    #if( $util.isString($groupClaim2) )
+      #if( $util.isList($util.parseJson($groupClaim2)) )
+        #set( $groupClaim2 = $util.parseJson($groupClaim2) )
+      #else
+        #set( $groupClaim2 = [$groupClaim2] )
+      #end
+    #end
+    #foreach( $userGroup in $groupClaim2 )
+      #if( $groupEntity2 == $userGroup )
+        #if( !$groupAllowedFields2.isEmpty() || !$groupNullAllowedFields2.isEmpty() )
+          $util.qr($allowedFields.addAll($groupAllowedFields2))
+          $util.qr($nullAllowedFields.addAll($groupNullAllowedFields2))
+        #else
+          #set( $isAuthorized = true )
+          #break
+        #end
+      #end
+    #end
+  #end
+#end
+#if( !$isAuthorized && $allowedFields.isEmpty() && $nullAllowedFields.isEmpty() )
+$util.unauthorized()
+#end
+#if( !$isAuthorized )
+  #foreach( $entry in $util.map.copyAndRetainAllKeys($ctx.args.input, $inputFields).entrySet() )
+    #if( $util.isNull($entry.value) && !$nullAllowedFields.contains($entry.key) )
+      $util.qr($deniedFields.put($entry.key, ""))
+    #end
+  #end
+  #foreach( $deniedField in $util.list.copyAndRemoveAll($inputFields, $allowedFields) )
+    $util.qr($deniedFields.put($deniedField, ""))
+  #end
+#end
+#if( $deniedFields.keySet().size() > 0 )
+  $util.error("Unauthorized on ${deniedFields.keySet()}", "Unauthorized")
+#end
+$util.toJson({})
+## [End] Authorization Steps. **

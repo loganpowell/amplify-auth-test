@@ -1,0 +1,32 @@
+[
+  {
+    "category": "api",
+    "resourceName": "amplifyauthtest",
+    "service": "AppSync"
+  },
+  {
+    "category": "api",
+    "resourceName": "AdminQueries",
+    "service": "API Gateway"
+  },
+  {
+    "category": "auth",
+    "resourceName": "userPoolGroups",
+    "service": "Cognito-UserPool-Groups"
+  },
+  {
+    "category": "auth",
+    "resourceName": "ampAuthTestAuth",
+    "service": "Cognito"
+  },
+  {
+    "category": "function",
+    "resourceName": "ampAuthTestAuthPostConfirmation",
+    "service": "Lambda"
+  },
+  {
+    "category": "function",
+    "resourceName": "AdminQueriesacc5c791",
+    "service": "Lambda"
+  }
+]

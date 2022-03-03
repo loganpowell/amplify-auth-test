@@ -1,0 +1,454 @@
+{
+  "Description": "{\"createdOn\":\"Mac\",\"createdBy\":\"Amplify\",\"createdWith\":\"7.6.21\",\"stackType\":\"auth-Cognito-UserPool-Groups\",\"metadata\":{}}",
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "env": {
+      "Type": "String"
+    },
+    "AuthRoleArn": {
+      "Type": "String"
+    },
+    "UnauthRoleArn": {
+      "Type": "String"
+    },
+    "authampAuthTestAuthUserPoolId": {
+      "Type": "String",
+      "Default": "authampAuthTestAuthUserPoolId"
+    },
+    "authampAuthTestAuthIdentityPoolId": {
+      "Type": "String",
+      "Default": "authampAuthTestAuthIdentityPoolId"
+    },
+    "authampAuthTestAuthAppClientID": {
+      "Type": "String",
+      "Default": "authampAuthTestAuthAppClientID"
+    },
+    "authampAuthTestAuthAppClientIDWeb": {
+      "Type": "String",
+      "Default": "authampAuthTestAuthAppClientIDWeb"
+    }
+  },
+  "Conditions": {
+    "ShouldNotCreateEnvResources": {
+      "Fn::Equals": [
+        {
+          "Ref": "env"
+        },
+        "NONE"
+      ]
+    }
+  },
+  "Resources": {
+    "SuperAdminsGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "UserPoolId": {
+          "Ref": "authampAuthTestAuthUserPoolId"
+        },
+        "Description": "override success",
+        "GroupName": "SuperAdmins",
+        "Precedence": 1,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "SuperAdminsGroupRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "SuperAdminsGroupRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "authampAuthTestAuthIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        },
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "authampAuthTestAuthUserPoolId"
+              },
+              "-SuperAdminsGroupRole"
+            ]
+          ]
+        }
+      }
+    },
+    "AdminsGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "UserPoolId": {
+          "Ref": "authampAuthTestAuthUserPoolId"
+        },
+        "Description": "override success",
+        "GroupName": "Admins",
+        "Precedence": 2,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "AdminsGroupRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "AdminsGroupRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "authampAuthTestAuthIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        },
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "authampAuthTestAuthUserPoolId"
+              },
+              "-AdminsGroupRole"
+            ]
+          ]
+        }
+      }
+    },
+    "WritersGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "UserPoolId": {
+          "Ref": "authampAuthTestAuthUserPoolId"
+        },
+        "Description": "override success",
+        "GroupName": "Writers",
+        "Precedence": 3,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "WritersGroupRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "WritersGroupRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "authampAuthTestAuthIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        },
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "authampAuthTestAuthUserPoolId"
+              },
+              "-WritersGroupRole"
+            ]
+          ]
+        }
+      }
+    },
+    "ReadersGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "UserPoolId": {
+          "Ref": "authampAuthTestAuthUserPoolId"
+        },
+        "Description": "override success",
+        "GroupName": "Readers",
+        "Precedence": 4,
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "ReadersGroupRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "ReadersGroupRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "authampAuthTestAuthIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        },
+        "RoleName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "authampAuthTestAuthUserPoolId"
+              },
+              "-ReadersGroupRole"
+            ]
+          ]
+        }
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            },
+            "PolicyName": "UserGroupLogPolicy"
+          },
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cognito-identity:SetIdentityPoolRoles",
+                    "cognito-identity:ListIdentityPools",
+                    "cognito-identity:describeIdentityPool"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": "UserGroupExecutionPolicy"
+          },
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "iam:PassRole"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "AuthRoleArn"
+                    },
+                    {
+                      "Ref": "UnauthRoleArn"
+                    }
+                  ]
+                }
+              ]
+            },
+            "PolicyName": "UserGroupPassRolePolicy"
+          }
+        ],
+        "RoleName": {
+          "Fn::If": [
+            "ShouldNotCreateEnvResources",
+            "ampAuthTestAuth",
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "ampAuthTestAuth-ExecutionRole-",
+                  {
+                    "Ref": "env"
+                  }
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "RoleMapFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "ZipFile": "const response = require('cfn-response');\nconst AWS = require('aws-sdk');\nexports.handler = (event, context) => {\n  if (event.RequestType == 'Delete') {\n    response.send(event, context, response.SUCCESS, { message: 'Request type delete' });\n  }\n  if (event.RequestType == 'Create' || event.RequestType == 'Update') {\n    let { identityPoolId, appClientID, appClientIDWeb, userPoolId, region } = event.ResourceProperties;\n    try {\n      const cognitoidentity = new AWS.CognitoIdentity();\n      let params = {\n        IdentityPoolId: identityPoolId,\n        Roles: {\n          authenticated: event.ResourceProperties.AuthRoleArn,\n          unauthenticated: event.ResourceProperties.UnauthRoleArn,\n        },\n        RoleMappings: {},\n      };\n      if (appClientIDWeb) {\n        params.RoleMappings[`cognito-idp.${region}.amazonaws.com/${userPoolId}:${appClientIDWeb}`] = {\n          Type: 'Token',\n          AmbiguousRoleResolution: 'AuthenticatedRole',\n        };\n      }\n      if (appClientID) {\n        params.RoleMappings[`cognito-idp.${region}.amazonaws.com/${userPoolId}:${appClientID}`] = {\n          Type: 'Token',\n          AmbiguousRoleResolution: 'AuthenticatedRole',\n        };\n      }\n      cognitoidentity.setIdentityPoolRoles(params).promise();\n      response.send(event, context, response.SUCCESS, { message: 'Successfully updated identity pool.' });\n    } catch (err) {\n      response.send(event, context, response.FAILED, { message: 'Error updating identity pool' });\n    }\n  }\n};\n"
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Handler": "index.handler",
+        "Runtime": "nodejs12.x",
+        "Timeout": 300
+      }
+    },
+    "RoleMapFunctionInput": {
+      "Type": "Custom::LambdaCallout",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "RoleMapFunction",
+            "Arn"
+          ]
+        },
+        "AuthRoleArn": {
+          "Ref": "AuthRoleArn"
+        },
+        "UnauthRoleArn": {
+          "Ref": "UnauthRoleArn"
+        },
+        "identityPoolId": {
+          "Ref": "authampAuthTestAuthIdentityPoolId"
+        },
+        "userPoolId": {
+          "Ref": "authampAuthTestAuthUserPoolId"
+        },
+        "appClientIDWeb": {
+          "Ref": "authampAuthTestAuthAppClientIDWeb"
+        },
+        "appClientID": {
+          "Ref": "authampAuthTestAuthAppClientID"
+        },
+        "region": {
+          "Ref": "AWS::Region"
+        },
+        "env": {
+          "Ref": "env"
+        }
+      },
+      "DependsOn": [
+        "RoleMapFunction"
+      ],
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete"
+    }
+  },
+  "Outputs": {
+    "SuperAdminsGroupRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SuperAdminsGroupRole",
+          "Arn"
+        ]
+      }
+    },
+    "AdminsGroupRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AdminsGroupRole",
+          "Arn"
+        ]
+      }
+    },
+    "WritersGroupRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WritersGroupRole",
+          "Arn"
+        ]
+      }
+    },
+    "ReadersGroupRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ReadersGroupRole",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

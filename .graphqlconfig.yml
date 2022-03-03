@@ -1,0 +1,15 @@
+projects:
+    amplifyauthtest:
+        schemaPath: client/graphql/schema.json
+        includes:
+            - client/graphql/**/*.ts
+        excludes:
+            - ./amplify/**
+        extensions:
+            amplify:
+                codeGenTarget: typescript
+                generatedFileName: client/API.ts
+                docsFilePath: client/graphql
+extensions:
+    amplify:
+        version: 3

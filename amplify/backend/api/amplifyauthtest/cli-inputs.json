@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "serviceConfiguration": {
+    "apiName": "amplifyauthtest",
+    "serviceName": "AppSync",
+    "gqlSchemaPath": "/Users/logan/Desktop/projects/throwaway/amplify-auth-test/amplify/backend/api/amplifyauthtest/schema.graphql",
+    "defaultAuthType": {
+      "mode": "AWS_IAM"
+    },
+    "additionalAuthTypes": [
+      {
+        "mode": "AMAZON_COGNITO_USER_POOLS",
+        "cognitoUserPoolId": "authampAuthTestAuth"
+      }
+    ]
+  }
+}

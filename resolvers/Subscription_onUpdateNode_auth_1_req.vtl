@@ -1,0 +1,44 @@
+## [Start] Authorization Steps. **
+$util.qr($ctx.stash.put("hasAuth", true))
+#set( $isAuthorized = false )
+#if( $util.authType() == "IAM Authorization" )
+$util.unauthorized()
+#end
+#if( $util.authType() == "User Pool Authorization" )
+  #if( !$isAuthorized )
+    #set( $staticGroupRoles = [{"claim":"cognito:groups","entity":"Admins"},{"claim":"cognito:groups","entity":"Writers"},{"claim":"cognito:groups","entity":"SuperAdmins"}] )
+    #foreach( $groupRole in $staticGroupRoles )
+      #set( $groupsInToken = $util.defaultIfNull($ctx.identity.claims.get($groupRole.claim), []) )
+      #if( $groupsInToken.contains($groupRole.entity) )
+        #set( $isAuthorized = true )
+        #break
+      #end
+    #end
+  #end
+  #if( !$isAuthorized )
+    #set( $ownerEntity0 = $util.defaultIfNull($ctx.args.owner, null) )
+    #set( $ownerClaim0 = $util.defaultIfNull($ctx.identity.claims.get("username"), $util.defaultIfNull($ctx.identity.claims.get("cognito:username"), "___xamznone____")) )
+    #if( $ownerEntity0 == $ownerClaim0 )
+      #set( $isAuthorized = true )
+    #end
+  #end
+  #if( !$isAuthorized )
+    #set( $ownerEntity1 = $util.defaultIfNull($ctx.args.readers, null) )
+    #set( $ownerClaim1 = $util.defaultIfNull($ctx.identity.claims.get("username"), $util.defaultIfNull($ctx.identity.claims.get("cognito:username"), "___xamznone____")) )
+    #if( $ownerEntity1 == $ownerClaim1 )
+      #set( $isAuthorized = true )
+    #end
+  #end
+  #if( !$isAuthorized )
+    #set( $ownerEntity2 = $util.defaultIfNull($ctx.args.writers, null) )
+    #set( $ownerClaim2 = $util.defaultIfNull($ctx.identity.claims.get("username"), $util.defaultIfNull($ctx.identity.claims.get("cognito:username"), "___xamznone____")) )
+    #if( $ownerEntity2 == $ownerClaim2 )
+      #set( $isAuthorized = true )
+    #end
+  #end
+#end
+#if( !$isAuthorized )
+$util.unauthorized()
+#end
+$util.toJson({"version":"2018-05-29","payload":{}})
+## [End] Authorization Steps. **

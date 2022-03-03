@@ -1,0 +1,172 @@
+{
+  "stackName": "amplify-amplifyauthtest-dev-155726",
+  "props": {
+    "templateFile": "root-stack-template.json",
+    "parameters": {
+      "AuthRoleName": "amplify-amplifyauthtest-dev-155726-authRole",
+      "UnauthRoleName": "amplify-amplifyauthtest-dev-155726-unauthRole",
+      "DeploymentBucketName": "amplify-amplifyauthtest-dev-155726-deployment"
+    },
+    "preserveLogicalIds": true,
+    "loadNestedStacks": {
+      "apiAdminQueries": {
+        "templateFile": "api/AdminQueries/AdminQueries-cloudformation-template.json",
+        "parameters": {
+          "env": "dev"
+        },
+        "preserveLogicalIds": true,
+        "loadNestedStacks": {}
+      },
+      "apiamplifyauthtest": {
+        "templateFile": "api/amplifyauthtest/cloudformation-template.json",
+        "parameters": {
+          "AppSyncApiName": "amplifyauthtest",
+          "DynamoDBBillingMode": "PAY_PER_REQUEST",
+          "DynamoDBEnableServerSideEncryption": false,
+          "S3DeploymentBucket": "amplify-amplifyauthtest-dev-155726-deployment",
+          "S3DeploymentRootKey": "amplify-appsync-files/f3f78987d0ab531977a7fadc5ac331557ce7a431",
+          "env": "dev"
+        },
+        "preserveLogicalIds": true,
+        "loadNestedStacks": {
+          "Asset": {
+            "templateFile": "api/amplifyauthtest/amplify-appsync-files/stacks/Asset.json",
+            "preserveLogicalIds": true,
+            "loadNestedStacks": {}
+          },
+          "ConnectionStack": {
+            "templateFile": "api/amplifyauthtest/amplify-appsync-files/stacks/ConnectionStack.json",
+            "preserveLogicalIds": true,
+            "loadNestedStacks": {}
+          },
+          "CustomResourcesjson": {
+            "templateFile": "api/amplifyauthtest/amplify-appsync-files/stacks/CustomResources.json",
+            "preserveLogicalIds": true,
+            "loadNestedStacks": {}
+          },
+          "Edge": {
+            "templateFile": "api/amplifyauthtest/amplify-appsync-files/stacks/Edge.json",
+            "preserveLogicalIds": true,
+            "loadNestedStacks": {}
+          },
+          "Node": {
+            "templateFile": "api/amplifyauthtest/amplify-appsync-files/stacks/Node.json",
+            "preserveLogicalIds": true,
+            "loadNestedStacks": {}
+          }
+        }
+      },
+      "authampAuthTestAuth": {
+        "templateFile": "auth/ampAuthTestAuth/ampAuthTestAuth-cloudformation-template.json",
+        "parameters": {
+          "identityPoolName": "ampAuthTestIDPool",
+          "allowUnauthenticatedIdentities": true,
+          "resourceNameTruncated": "amplif59b5cdaf",
+          "userPoolName": "ampAuthTestUserPool",
+          "autoVerifiedAttributes": [
+            "email"
+          ],
+          "mfaConfiguration": "OFF",
+          "mfaTypes": [
+            "SMS Text Message"
+          ],
+          "smsAuthenticationMessage": "Your authentication code is {####}",
+          "smsVerificationMessage": "Your verification code is {####}",
+          "emailVerificationSubject": "Your verification code",
+          "emailVerificationMessage": "Your verification code is {####}",
+          "defaultPasswordPolicy": false,
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": [],
+          "requiredAttributes": [
+            "email"
+          ],
+          "aliasAttributes": [],
+          "userpoolClientGenerateSecret": false,
+          "userpoolClientRefreshTokenValidity": 30,
+          "userpoolClientWriteAttributes": [
+            "email"
+          ],
+          "userpoolClientReadAttributes": [
+            "email"
+          ],
+          "userpoolClientLambdaRole": "ampAut59b5cdaf_userpoolclient_lambda_role",
+          "userpoolClientSetAttributes": false,
+          "sharedId": "59b5cdaf",
+          "resourceName": "ampAuthTestAuth",
+          "authSelections": "identityPoolAndUserPool",
+          "useDefault": "manual",
+          "thirdPartyAuth": false,
+          "usernameAttributes": [
+            "email"
+          ],
+          "userPoolGroups": true,
+          "adminQueries": true,
+          "triggers": "{\"PostConfirmation\":[\"add-to-group\"]}",
+          "hostedUI": false,
+          "userPoolGroupList": [
+            "SuperAdmins",
+            "Admins",
+            "Writers",
+            "Readers"
+          ],
+          "adminQueryGroup": "SuperAdmins",
+          "serviceName": "Cognito",
+          "usernameCaseSensitive": false,
+          "useEnabledMfas": true,
+          "breakCircularDependency": true,
+          "dependsOn": [
+            {
+              "category": "function",
+              "resourceName": "ampAuthTestAuthPostConfirmation",
+              "triggerProvider": "Cognito",
+              "attributes": [
+                "Arn",
+                "Name"
+              ]
+            }
+          ],
+          "permissions": [
+            "{\"policyName\":\"AddToGroupCognito\",\"trigger\":\"PostConfirmation\",\"effect\":\"Allow\",\"actions\":[\"cognito-idp:AdminAddUserToGroup\",\"cognito-idp:GetGroup\",\"cognito-idp:CreateGroup\"],\"resource\":{\"paramType\":\"!GetAtt\",\"keys\":[\"UserPool\",\"Arn\"]}}"
+          ],
+          "authTriggerConnections": [
+            "{\"triggerType\":\"PostConfirmation\",\"lambdaFunctionName\":\"ampAuthTestAuthPostConfirmation\"}"
+          ],
+          "env": "dev"
+        },
+        "preserveLogicalIds": true,
+        "loadNestedStacks": {}
+      },
+      "authuserPoolGroups": {
+        "templateFile": "auth/userPoolGroups/userPoolGroups-cloudformation-template.json",
+        "parameters": {
+          "env": "dev"
+        },
+        "preserveLogicalIds": true,
+        "loadNestedStacks": {}
+      },
+      "functionAdminQueriesacc5c791": {
+        "templateFile": "function/AdminQueriesacc5c791/AdminQueriesacc5c791-cloudformation-template.json",
+        "parameters": {
+          "deploymentBucketName": "amplify-amplifyauthtest-dev-155726-deployment",
+          "s3Key": "amplify-builds/AdminQueriesacc5c791-54723861553138354e66-build.zip",
+          "env": "dev"
+        },
+        "preserveLogicalIds": true,
+        "loadNestedStacks": {}
+      },
+      "functionampAuthTestAuthPostConfirmation": {
+        "templateFile": "function/ampAuthTestAuthPostConfirmation/ampAuthTestAuthPostConfirmation-cloudformation-template.json",
+        "parameters": {
+          "modules": "add-to-group",
+          "resourceName": "ampAuthTestAuthPostConfirmation",
+          "GROUP": "Readers",
+          "deploymentBucketName": "amplify-amplifyauthtest-dev-155726-deployment",
+          "s3Key": "amplify-builds/ampAuthTestAuthPostConfirmation-65626d454d4234424e68-build.zip",
+          "env": "dev"
+        },
+        "preserveLogicalIds": true,
+        "loadNestedStacks": {}
+      }
+    }
+  }
+}
