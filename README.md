@@ -3,69 +3,83 @@ https://literal.io/writing/implementing-guest-authentication-with-amplify-cognit
 https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html
 https://openid.net/specs/openid-connect-core-1_0.html#SelfIssuedValidation
 
-```js
-const unauth = {
-    aud: "54irqi949savl6teqdhr5heq4",
-    auth_time: 1645633173,
-    "cognito:username": "87f4282b-d938-4891-9338-3f707f6beae8",
-    email_verified: true,
-    event_id: "208112c7-5e35-4de6-b3a9-f0839c29a438",
-    exp: 1645636803,
-    email: "loganpowell@gmail.com",
-    iss: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xDz7AncLG",
-    iat: 1645633173,
-    jti: "77d83aa0-9c12-4aca-8386-b1d783f9f444",
-    origin_jti: "098244cf-1c02-47c4-b33e-d7fa387ca912",
-    sub: "87f4282b-d938-4891-9338-3f707f6beae8",
-    token_use: "id",
-}
+As documented in the [AppSync Resolver Context Reference],
+the identity context included with a request against AppSync
+from an unauthenticated Cognito identity (i.e. IAM
+authentication) has the following shape:
 
-const auth = {
-    sub: "87f4282b-d938-4891-9338-3f707f6beae8",
-    email_verified: true,
-    iss: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xDz7AncLG",
-    "cognito:username": "87f4282b-d938-4891-9338-3f707f6beae8",
-    origin_jti: "ff938f9e-15f9-43a9-a97c-ce13d2c6ba36",
-    aud: "54irqi949savl6teqdhr5heq4",
-    event_id: "7624fbba-bca8-4665-be84-f347432d1d0e",
-    token_use: "id",
-    auth_time: 1645633263,
-    exp: 1645636863,
-    iat: 1645633263,
-    jti: "28cd98a7-3eba-4607-9622-39231c6910fe",
-    email: "loganpowell@gmail.com",
+```json
+{
+    "accountId": "string",
+    "cognitoIdentityPoolId": "string",
+    "cognitoIdentityId": "string",
+    // IP address(es) of request
+    "sourceIp": ["string"],
+    // IAM user principal
+    "username": "string",
+    "userArn": "string",
+    // authenticated/unauthenticated based on the identity type
+    "cognitoIdentityAuthType": "string",
+    // the auth provider that was used to obtain the credentials
+    "cognitoIdentityAuthProvider": "string"
 }
 ```
 
--   `sub`: Subject = User ID
--   `aud`: Audience = Must match one of the audience entries
-    that is configured for the authorizer. contains the
-    `client_id` that is used in the user authentication
--   `email_verified`: boolean
--   `token_use`: "id"
--   `auth_time`: Authentication time: time when auth occured
-    UTC (Unix) Date.now()
--   `iss`: Issuer = Must match the issuer that is configured
-    for the authorizer.
--   `cognito:username": username in cognito
--   `exp`: Must be after the current time in UTC.
--   `given_name`: User Name
--   `iat`: Must be before the current time in UTC.
--   `email`: email address
+[appsync resolver context reference]: https://docs.aws.amazon.com/appsync/latest/devguide/resolver-context-reference.html#aws-appsync-resolver-context-reference-identity
 
-| key                | translation   | Cognito use                |
-| ------------------ | ------------- | -------------------------- |
-| `aud`              | Audience      | contains `client_id`       |
-| `auth_time`        | apparent      | Date.now() of creation     |
-| `cognito:username` | apparent      | username (human readable)  |
-| `email_verified`   | apparent      | boolean                    |
-| `event_id`         | Auth event ID |
-| `exp`              | Expiration    | Date.now() + TTL           |
-| `given_name`       | apparent      | user input                 |
-| `iss`              | Issuer        | User ID Pool URL (+region) |
-| `origin_jti`       | JWT ID Origin |
-| `sub`              | Subject       | User ID                    |
-| `token_use`        | Purpose       | "id"                       |
+While the identity context of a request from an
+authenticated Cognito identity (i.e. Cognito User Pool
+authentication) looks like the following:
+
+```json
+{
+    "sub" : "uuid",
+    "issuer" : "string",
+    "username" : "string",
+    // JWT Claims
+    "claims" : { ... },
+    "sourceIp" : ["x.x.x.x"],
+    "defaultAuthStrategy" : "string"
+}
+```
+
+## JWT Claims
+
+```json
+// example claims
+{
+    "aud": "54irqi949savl6teqdhr5heq4",
+    "auth_time": 1645633173,
+    "cognito:username": "87f4282b-d938-4891-9338-3f707f6beae8",
+    "email": "loganpowell@gmail.com",
+    "email_verified": true,
+    "event_id": "208112c7-5e35-4de6-b3a9-f0839c29a438",
+    "exp": 1645636803,
+    "iat": 1645633173,
+    "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_xDz7AncLG",
+    "jti": "77d83aa0-9c12-4aca-8386-b1d783f9f444",
+    "origin_jti": "098244cf-1c02-47c4-b33e-d7fa387ca912",
+    "sub": "87f4282b-d938-4891-9338-3f707f6beae8",
+    "token_use": "id"
+}
+```
+
+| key                | translation       | Cognito use                                                         |
+| ------------------ | ----------------- | ------------------------------------------------------------------- |
+| `aud`              | Audience          | contains `client_id` (must match an entry configured in authorizer) |
+| `auth_time`        |                   | Date.now() of auth time / refresh token issuance                    |
+| `cognito:username` |                   | username in Cognito                                                 |
+| `email`            |                   | user email address                                                  |
+| `email_verified`   |                   | boolean                                                             |
+| `event_id`         | Auth event ID     | unique ID of                                                        |
+| `exp`              | Expiration        | auth time + TTL                                                     |
+| `iat`              | Initial Auth Time | Date.now() of auth time (before current time)                       |
+| `given_name`       |                   | Name user input                                                     |
+| `iss`              | Issuer            | User ID Pool URL (+region) must match configured issuer             |
+| `jti`              | JWT ID            | Unique ID of JWT                                                    |
+| `origin_jti`       | JWT ID Origin     | ID of the JWT originator                                            |
+| `sub`              | Subject           | User ID                                                             |
+| `token_use`        | Purpose           | "id"                                                                |
 
 The Client MUST validate that the value of the iss (issuer)
 Claim is https://self-isued.me. If iss contains a different
@@ -89,14 +103,35 @@ tokens that were issued too far away from the current time,
 limiting the amount of time that nonces need to be stored to
 prevent attacks. The acceptable range is Client specific.
 
-## Changing exported resolver names to remove pre extension dots
-
-```sh
-autoload -U zmv
-zmv '(*).(*)' '${1//./_}.$2'
-```
-
 ## AppSync
+
+### Context
+
+#### Example
+
+```json
+{
+    "arguments": {
+        "id": "1234"
+    },
+    "source": {},
+    "result": {
+        "postId": "1234",
+        "title": "Some title",
+        "content": "Some content",
+        "author": {
+            "id": "5678",
+            "name": "Author Name"
+        }
+    },
+    "identity": {
+        "sourceIp": ["x.x.x.x"],
+        "userArn": "arn:aws:iam::123456789012:user/appsync",
+        "accountId": "666666666666",
+        "user": "AIDAAAAAAAAAAAAAAAAAA"
+    }
+}
+```
 
 ### Authorization
 
@@ -105,13 +140,13 @@ zmv '(*).(*)' '${1//./_}.$2'
 ```json
 {
     "accountId": "string",
-    "cognitoIdentityPoolId": "string",
-    "cognitoIdentityId": "string",
-    "sourceIp": ["string"],
-    "username": "string", // IAM user principal
-    "userArn": "string",
-    "cognitoIdentityAuthType": "string", // authenticated/unauthenticated based on the identity type
     "cognitoIdentityAuthProvider": "string" // the auth provider that was used to obtain the credentials
+    "cognitoIdentityAuthType": "string", // authenticated/unauthenticated based on the identity type
+    "cognitoIdentityId": "string",
+    "cognitoIdentityPoolId": "string",
+    "sourceIp": ["string"],
+    "userArn": "string",
+    "username": "string", // IAM user principal
 }
 ```
 
@@ -119,16 +154,16 @@ zmv '(*).(*)' '${1//./_}.$2'
 
 ```json
 {
-    "sub" : "uuid",
-    "issuer" : "string",
-    "username" : "string",
     "claims" : { ... },
-    "sourceIp" : ["x.x.x.x"],
     "defaultAuthStrategy" : "string"
+    "issuer" : "string",
+    "sourceIp" : ["x.x.x.x"],
+    "sub" : "uuid",
+    "username" : "string",
 }
 ```
 
-#### Authorization Flow
+# Authorization Flow
 
 Amplify Guest Users: How to Give Limited Access to Users without Logging In: https://youtu.be/lMOVP1Y8vOc?t=431
 
@@ -177,74 +212,151 @@ Amplify Guest Users: How to Give Limited Access to Users without Logging In: htt
 
 ```
 
+## Guest Access
+
 ```diff
-# Publication Event Workflow
+# Authentication
+SEQUENCE No.            :  001 002 003 004  :
++ IAM                   :       i---o       :
++ Cognito               :       |   |       :
+    - User Pools        :   i---o   i---o   :
+    - Identity Pools    :   |           |   :
++ AppSync               :   |           |   :
+    - graphql_api       :   o           i   :
 
-- Actor                 :  001 002 003 004 005 006 007 008 009 010 011 012  :
-+ Cognito               :                                                   :
-    - IAM               :                                                   :
-    - User Pools        :                   i---o                           :
-+ AppSync               :                   |   |                           :
-    - graphql_api       :               i---o***i---o***i---o***i---o       :
-    - admin_queries     :               |           |   |   |   |   |       :
-+ DynamoDB              :               |           |   |   |   |   |       :
-    - Groups            :               |           i---o   |   |   |       :
-    + Nodes             :               |                   i---o   |       :
-        - Assets        :               |                           |       :
-    - Edges             :               |                           |       :
-    - Events            O   o           |                           |       :
-+ DynamoDB Stream       :   |           |                           |       :
-    - STATUS_CHANGED    :   i---o       |                           |       :
-+ SNS (topics)          :       |       |                           |       :
-    - NODE_PUBLISHED    :       i---o   |                           |       :
-+ Lambda                :           |   |                           |       :
-    - Publisher         A           i---o***************************i---o   :
-+ Cloudwatch            :                                               |   :
-    - Logs              :                                               i   :
-    - Metrics           :                                                   :
-+ Pinpoint              :                                                   :
-    - Segmentation      :                                                   :
-+ SES                   :                                                   :
-    - Transactional     :                                                   :
-    - Broadcast         :                                                   :
-+ Triggers              :                                                   :
-    - Schedule          :                                                   :
-+ SMS                   :                                                   :
-
+# Authorization
+SEQUENCE No.            :  001 002 003 004  :
++ IAM                   :       i---o       :
++ Cognito               :       |   |       :
+    - User Pools        :       |   |       :
+    - Identity Pools    :   i---o   i---o   :
++ AppSync               :   |           |   :
+    - graphql_api       :   o           i   :
 ```
 
+## Publication Event
+
 ```diff
-# Owner Sharing Event Workflow
+- Actor                 :  001 002 003 004 005 006 007 008 009 010  :
++ Cognito               :                                           :
+    - IAM               :                                           :
+    - Identity Pools    :               i---o                       :
++ AppSync               :               :   :                       :
+    + graphql_api       :               i---o---i---o***i---o       :
+        - context       :               |   i---o   |   |   |       :
+    - admin_queries     :               |           |   |   |       :
++ DynamoDB              :               |           |   |   |       :
+    - Groups            :               |           |   |   |       :
+    + Nodes             :               |           i---o   |       :
+        - Assets        :               |                   |       :
+    - Edges             :               |                   |       :
+    - Events            O   o           |                   |       :
++ DynamoDB Stream       :   |           |                   |       :
+    - STATUS_CHANGED    :   i---o       |                   |       :
++ SNS (topics)          :       |       |                   |       :
+    - NODE_PUBLISHED    :       i---o   |                   |       :
++ Lambda                :           |   |                   |       :
+    - Publisher         A           i---o*******************i---o   :
++ Cloudwatch            :                                       |   :
+    - Logs              :                                       i   :
+    - Metrics           :                                           :
+```
 
-- Actor                 :  001 002 003 004 005 006 007 008 009 010 011 012  :
-+ Cognito               :                                                   :
-    - IAM               :                                                   :
-    - User Pools        :                   i---o                           :
-+ AppSync               :                   |   |                           :
-    - graphql_api       :               i---o***i---o***i---o***i---o       :
-    - admin_queries     :               |           |   |   |   |   |       :
-+ DynamoDB              :               |           |   |   |   |   |       :
-    - Groups            :               |           i---o   |   |   |       :
-    + Nodes             :               |                   i---o   |       :
-        - Assets        :               |                           |       :
-    - Edges             :               |                           |       :
-    - Events            O   o           |                           |       :
-+ DynamoDB Stream       :   |           |                           |       :
-    - STATUS_CHANGED    :   i---o       |                           |       :
-+ SNS (topics)          :       |       |                           |       :
-    - NODE_PUBLISHED    :       i---o   |                           |       :
-+ Lambda                :           |   |                           |       :
-    - Publisher         A           i---o***************************i---o   :
-+ Cloudwatch            :                                               |   :
-    - Logs              :                                               i   :
-    - Metrics           :                                                   :
-+ Pinpoint              :                                                   :
-    - Segmentation      :                                                   :
-+ SES                   :                                                   :
-    - Transactional     :                                                   :
-    - Broadcast         :                                                   :
-+ Triggers              :                                                   :
-    - Schedule          :                                                   :
-+ SMS                   :                                                   :
+| seq | `o`: output                                            | `i`: input                                 |
+| --- | ------------------------------------------------------ | ------------------------------------------ |
+| 001 | Event: `{ Type: NODE_PUBLISHED, scope: [Node]` }       | DynamoDB Streams: `NODE_PUBLISHED`         |
+| 002 | DynamoDB Streams: event emitted to SNS                 | SNS: receives event                        |
+| 003 | SNS Topic: NODE_PUBLISHED                              | Lambda: update: `NODE_PUBLISHED`: [`Node`] |
+| 004 | Lambda: batch gql update Nodes' `groups` [IAM]+Viewers | AppSync: receives gql with [owner creds]   |
+| 005 | AppSync: [context]: JWT: checks authorized creds       | `context`: compared against owner creds    |
+| 006 | Appsync: Confirmation of permissions                   | GraphQL: mutation authorized               |
+| 007 | GraphQL: Mutation sent to update Node(s) to allow      | DynamoDB: mutations transaction received   |
+| 008 | DynamoDB: mutations executed on relevant Nodes         | GraphQL: acknowledges mutation             |
+| 009 | Appsync: sends response back through API to lambda     | Lambda: receives API response              |
+| 010 | Lambda: console.log()s any metadata                    | Cloudwatch: records any logs from lambda   |
 
+[iam]: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_tags.html
+[context]: https://docs.aws.amazon.com/appsync/latest/devguide/resolver-context-reference.html#aws-appsync-resolver-context-reference-identity
+[owner creds]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags_roles.html#id_tags_roles_procs-console
+
+## Tracking Circuit
+
+```diff
+- Actor                 :  001 002 003 004 005 006 007 008 009 010  :
++ Cognito               :
+    - IAM               :
+    - Identity Pools    :
++ AppSync               :
+    + graphql_api       :
+        - context       :
+    - admin_queries     :
++ DynamoDB              :
+    - Groups            :
+    + Nodes             :
+        - Assets        :
+    - Edges             :
+    - Events            :
++ DynamoDB Stream       :
+    - STATUS_CHANGED    :
++ SNS (topics)          :
+    - NODE_PUBLISHED    :
+    - EMAIL_SENT        :   i # <==
+    - EMAIL_INBOUND     :   i # <==
++ Lambda                :
+    - Publisher         :
++ Cloudwatch            : 
+    - Logs              :
+    - Metrics           :
++ Pinpoint              :
+    - SnsDestination    :
+    - Analytics         :                           i---o
+    - Responses         :                           i---o
+    - Endpoints         :   i---o                   |   |
+    - A/B test          :   |   |                   |   |
+    - Segmentation      :   |   |                   |   |
++ SES                   :   |   |                   |   |
+    - Transactional     :   |   i---o           o---i   i---o
+    - Broadcast         :   |       |           |           |
++ Triggers              :   |       |           |           |
+    - Schedule          :   |       |           |           |
++ SES                   :   |       i---o   i---o           i---o
++ SMS                   :   |           |   |                   |
++ Shooter               A   |           |   |                   |
+    - email provider    :   o           |   |                   i
++ Target                :               |   |
+    - phone             :               |   |
+    - email provider    :               i---o
+    - network           :
++ React                 :
+    - cookies           :
+```
+
+| seq.   | Desription |
+| ------ | ---------- |
+| 001`o` |            |
+| 001`i` |            |
+| 002`o` |            |
+| 002`i` |            |
+| 003`o` |            |
+| 003`i` |            |
+| 004`o` |            |
+| 004`i` |            |
+| 005`o` |            |
+| 005`i` |            |
+| 006`o` |            |
+| 006`i` |            |
+| 007`o` |            |
+| 007`i` |            |
+| 008`o` |            |
+| 008`i` |            |
+| 009`o` |            |
+| 009`i` |            |
+| 010`o` |            |
+| 010`1` |            |
+
+## Changing exported resolver names to remove pre extension dots
+
+```sh
+autoload -U zmv
+zmv '(*).(*)' '${1//./_}.$2'
 ```
